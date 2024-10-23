@@ -14,8 +14,10 @@ const (
 
 var processTickInterval int64 = 5
 
-var clearStrLen int = 0
-var clearStr string = strings.Repeat(" ", clearStrLen)
+var (
+	clearStrLen int    = 0
+	clearStr    string = strings.Repeat(" ", clearStrLen)
+)
 
 func getClearStr(str string) string {
 	if clearStrLen <= len(str) {
@@ -54,7 +56,7 @@ type Monitor struct {
 	seekAheadError error
 	seekAheadEnd   bool
 	finish         bool
-	_              uint32 //Add padding to make sure the next data 64bits alignment
+	_              uint32 // Add padding to make sure the next data 64bits alignment
 }
 
 func (m *Monitor) init(opStr string) {
@@ -193,7 +195,7 @@ type RMMonitor struct {
 	seekAheadError   error
 	seekAheadEnd     bool
 	finish           bool
-	_                uint32 //Add padding to make sure the next data 64bits alignment
+	_                uint32 // Add padding to make sure the next data 64bits alignment
 }
 
 func (m *RMMonitor) init() {
@@ -377,8 +379,18 @@ func (m *RMMonitor) getBucketFinishBar(snap *RMMonitorSnap) string {
 	return getClearStr("")
 }
 
+type MonitorStatus int
+
+const (
+	MonitorStatusScan MonitorStatus = iota
+	MonitorStatusProgress
+	MonitorStatusFinish
+)
+
 // for cp
 type CPMonitorSnap struct {
+	totalSize     int64
+	totalNum      int64
 	transferSize  int64
 	skipSize      int64
 	dealSize      int64
@@ -391,6 +403,67 @@ type CPMonitorSnap struct {
 	dealNum       int64
 	duration      int64
 	incrementSize int64
+	status        MonitorStatus
+}
+
+func (m CPMonitorSnap) TotalSize() int64 {
+	return m.totalSize
+}
+
+func (m CPMonitorSnap) TotalNum() int64 {
+	return m.totalNum
+}
+
+func (m CPMonitorSnap) TransferSize() int64 {
+	return m.transferSize
+}
+
+func (m CPMonitorSnap) SkipSize() int64 {
+	return m.skipSize
+}
+
+func (m CPMonitorSnap) DealSize() int64 {
+	return m.dealSize
+}
+
+func (m CPMonitorSnap) FileNum() int64 {
+	return m.fileNum
+}
+
+func (m CPMonitorSnap) DirNum() int64 {
+	return m.dirNum
+}
+
+func (m CPMonitorSnap) SkipNum() int64 {
+	return m.skipNum
+}
+
+func (m CPMonitorSnap) SkipNumDir() int64 {
+	return m.skipNumDir
+}
+
+func (m CPMonitorSnap) ErrNum() int64 {
+	return m.errNum
+}
+
+func (m CPMonitorSnap) OkNum() int64 {
+	return m.okNum
+}
+
+func (m CPMonitorSnap) DealNum() int64 {
+	return m.dealNum
+}
+
+func (m CPMonitorSnap) Duration() int64 {
+	return m.duration
+}
+
+func (m CPMonitorSnap) IncrementSize() int64 {
+	return m.incrementSize
+}
+
+func (m CPMonitorSnap) Status() MonitorStatus {
+	return m.status
 }
 
 /*
@@ -415,8 +488,9 @@ type CPMonitor struct {
 	op             operationType
 	seekAheadEnd   bool
 	finish         bool
-	_              uint32 //Add padding to make sure the next data 64bits alignment
+	_              uint32 // Add padding to make sure the next data 64bits alignment
 	lastSnapTime   time.Time
+	notifyCh       chan *CPMonitorSnap
 }
 
 func (m *CPMonitor) init(op operationType) {
@@ -436,6 +510,14 @@ func (m *CPMonitor) init(op operationType) {
 	m.lastSnapSize = 0
 	m.lastSnapTime = time.Now()
 	m.tickDuration = processTickInterval * int64(time.Second)
+}
+
+func (m *CPMonitor) SetMonitor(ch chan *CPMonitorSnap) {
+	m.notifyCh = ch
+}
+
+func (m *CPMonitor) Monitor() chan *CPMonitorSnap {
+	return m.notifyCh
 }
 
 func (m *CPMonitor) setScanError(err error) {
@@ -492,6 +574,8 @@ func (m *CPMonitor) updateErr(size, num int64) {
 
 func (m *CPMonitor) getSnapshot() *CPMonitorSnap {
 	var snap CPMonitorSnap
+	snap.totalNum = m.totalNum
+	snap.totalSize = m.totalSize
 	snap.transferSize = m.transferSize
 	snap.skipSize = m.skipSize
 	snap.dealSize = m.dealSize + snap.skipSize
@@ -524,6 +608,11 @@ func (m *CPMonitor) getProgressBar() string {
 	defer mu.RUnlock()
 
 	snap := m.getSnapshot()
+	if m.notifyCh != nil {
+		defer func() {
+			m.notifyCh <- snap
+		}()
+	}
 	if snap.duration < m.tickDuration {
 		return ""
 	} else {
@@ -533,10 +622,12 @@ func (m *CPMonitor) getProgressBar() string {
 	}
 
 	if m.seekAheadEnd && m.seekAheadError == nil {
+		snap.status = MonitorStatusProgress
 		return getClearStr(fmt.Sprintf("Total num: %d, size: %s. Dealed num: %d%s%s, Progress: %.3f%s, Speed: %.2fKB/s", m.totalNum, getSizeString(m.totalSize), snap.dealNum, m.getDealNumDetail(snap), m.getDealSizeDetail(snap), m.getPrecent(snap), "%%", m.getSpeed(snap)))
 	}
 	scanNum := max(m.totalNum, snap.dealNum)
 	scanSize := max(m.totalSize, snap.dealSize)
+	snap.status = MonitorStatusScan
 	return getClearStr(fmt.Sprintf("Scanned num: %d, size: %s. Dealed num: %d%s%s, Speed: %.2fKB/s.", scanNum, getSizeString(scanSize), snap.dealNum, m.getDealNumDetail(snap), m.getDealSizeDetail(snap), m.getSpeed(snap)))
 }
 
@@ -549,6 +640,12 @@ func (m *CPMonitor) getFinishBar(exitStat int) string {
 
 func (m *CPMonitor) getWholeFinishBar() string {
 	snap := m.getSnapshot()
+	snap.status = MonitorStatusFinish
+	if m.notifyCh != nil {
+		defer func() {
+			m.notifyCh <- snap
+		}()
+	}
 	if m.seekAheadEnd && m.seekAheadError == nil {
 		if snap.errNum == 0 {
 			return getClearStr(fmt.Sprintf("Succeed: Total num: %d, size: %s. OK num: %d%s%s.\n", m.totalNum, getSizeString(m.totalSize), snap.okNum, m.getDealNumDetail(snap), m.getSkipSize(snap)))
@@ -564,6 +661,12 @@ func (m *CPMonitor) getWholeFinishBar() string {
 
 func (m *CPMonitor) getDefeatBar() string {
 	snap := m.getSnapshot()
+	snap.status = MonitorStatusFinish
+	if m.notifyCh != nil {
+		defer func() {
+			m.notifyCh <- snap
+		}()
+	}
 	if m.seekAheadEnd && m.seekAheadError == nil {
 		return getClearStr(fmt.Sprintf("Total num: %d, size: %s. Dealed num: %d%s%s. When error happens.\n", m.totalNum, getSizeString(m.totalSize), snap.okNum, m.getOKNumDetail(snap), m.getSizeDetail(snap)))
 	}

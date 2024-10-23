@@ -38,7 +38,6 @@ type syncOptionType struct {
 }
 
 var specChineseSync = SpecText{
-
 	synopsisText: "将本地文件目录或者oss prefix从源端同步到目的端",
 
 	paramText: "src dest [options]",
@@ -195,7 +194,6 @@ var specChineseSync = SpecText{
 }
 
 var specEnglishSync = SpecText{
-
 	synopsisText: "Sync the local file directory or oss prefix from the source to the destination",
 
 	paramText: "src dest [options]",
@@ -359,82 +357,87 @@ var specEnglishSync = SpecText{
 
 // SyncCommand is the command upload, download and copy objects
 type SyncCommand struct {
-	command    Command
-	syncOption syncOptionType
+	command     Command
+	syncOption  syncOptionType
+	copyCommand *CopyCommand
 }
 
-var syncCommand = SyncCommand{
-	command: Command{
-		name:        "sync",
-		nameAlias:   []string{"sync"},
-		minArgc:     2,
-		maxArgc:     2,
-		specChinese: specChineseSync,
-		specEnglish: specEnglishSync,
-		group:       GroupTypeNormalCommand,
-		validOptionNames: []string{
-			// The following options are supported by sc command and cp command
-			//OptionRecursion,
-			OptionForce,
-			OptionUpdate,
-			OptionContinue,
-			OptionOutputDir,
-			OptionBigFileThreshold,
-			OptionPartSize,
-			OptionCheckpointDir,
-			OptionRange,
-			OptionEncodingType,
-			OptionInclude,
-			OptionExclude,
-			OptionMeta,
-			OptionACL,
-			OptionConfigFile,
-			OptionEndpoint,
-			OptionAccessKeyID,
-			OptionAccessKeySecret,
-			OptionSTSToken,
-			OptionProxyHost,
-			OptionProxyUser,
-			OptionProxyPwd,
-			OptionRetryTimes,
-			OptionRoutines,
-			OptionParallel,
-			OptionSnapshotPath,
-			OptionDisableCRC64,
-			OptionRequestPayer,
-			OptionLogLevel,
-			OptionMaxUpSpeed,
-			//OptionPartitionDownload,
-			//OptionVersionId,
-			OptionLocalHost,
-			OptionEnableSymlinkDir,
-			OptionOnlyCurrentDir,
-			OptionDisableDirObject,
-			OptionDisableAllSymlink,
-			OptionDisableIgnoreError,
-			OptionTagging,
-			OptionPassword,
-			OptionMode,
-			OptionECSRoleName,
-			OptionTokenTimeout,
-			OptionRamRoleArn,
-			OptionRoleSessionName,
-			OptionReadTimeout,
-			OptionConnectTimeout,
-			OptionSTSRegion,
-			OptionSkipVerifyCert,
-			OptionMaxDownSpeed,
-			OptionUserAgent,
-			OptionSignVersion,
-			OptionRegion,
-			OptionCloudBoxID,
-			OptionForcePathStyle,
+var syncCommand = *NewSyncCommand()
 
-			// The following options are only supported by sc command, not supported by cp command
-			OptionDelete,
-			OptionBackupDir,
+func NewSyncCommand() *SyncCommand {
+	return &SyncCommand{
+		command: Command{
+			name:        "sync",
+			nameAlias:   []string{"sync"},
+			minArgc:     2,
+			maxArgc:     2,
+			specChinese: specChineseSync,
+			specEnglish: specEnglishSync,
+			group:       GroupTypeNormalCommand,
+			validOptionNames: []string{
+				// The following options are supported by sc command and cp command
+				// OptionRecursion,
+				OptionForce,
+				OptionUpdate,
+				OptionContinue,
+				OptionOutputDir,
+				OptionBigFileThreshold,
+				OptionPartSize,
+				OptionCheckpointDir,
+				OptionRange,
+				OptionEncodingType,
+				OptionInclude,
+				OptionExclude,
+				OptionMeta,
+				OptionACL,
+				OptionConfigFile,
+				OptionEndpoint,
+				OptionAccessKeyID,
+				OptionAccessKeySecret,
+				OptionSTSToken,
+				OptionProxyHost,
+				OptionProxyUser,
+				OptionProxyPwd,
+				OptionRetryTimes,
+				OptionRoutines,
+				OptionParallel,
+				OptionSnapshotPath,
+				OptionDisableCRC64,
+				OptionRequestPayer,
+				OptionLogLevel,
+				OptionMaxUpSpeed,
+				// OptionPartitionDownload,
+				// OptionVersionId,
+				OptionLocalHost,
+				OptionEnableSymlinkDir,
+				OptionOnlyCurrentDir,
+				OptionDisableDirObject,
+				OptionDisableAllSymlink,
+				OptionDisableIgnoreError,
+				OptionTagging,
+				OptionPassword,
+				OptionMode,
+				OptionECSRoleName,
+				OptionTokenTimeout,
+				OptionRamRoleArn,
+				OptionRoleSessionName,
+				OptionReadTimeout,
+				OptionConnectTimeout,
+				OptionSTSRegion,
+				OptionSkipVerifyCert,
+				OptionMaxDownSpeed,
+				OptionUserAgent,
+				OptionSignVersion,
+				OptionRegion,
+				OptionCloudBoxID,
+				OptionForcePathStyle,
+
+				// The following options are only supported by sc command, not supported by cp command
+				OptionDelete,
+				OptionBackupDir,
+			},
 		},
-	},
+	}
 }
 
 // function for FormatHelper interface
@@ -459,12 +462,22 @@ func (sc *SyncCommand) Init(args []string, options OptionMapType) error {
 	delete(bakupOptions, OptionDelete)
 	delete(bakupOptions, OptionBackupDir)
 
+	copyCommand := NewCopyCommand()
 	copyCommand.cpOption.bSyncCommand = true
-	err := (&copyCommand).Init(args, bakupOptions)
+	err := copyCommand.Init(args, bakupOptions)
 	if err != nil {
 		return err
 	}
+	sc.copyCommand = copyCommand
 	return sc.command.Init(args, options, sc)
+}
+
+func (cc *SyncCommand) Monitor() <-chan *CPMonitorSnap {
+	return cc.copyCommand.Monitor()
+}
+
+func (cc *SyncCommand) SetMonitor(ch chan *CPMonitorSnap) {
+	cc.copyCommand.SetMonitor(ch)
 }
 
 // RunCommand simulate inheritance, and polymorphism
@@ -528,7 +541,7 @@ func (sc *SyncCommand) RunCommand() error {
 	}
 
 	if !sc.syncOption.bDelete {
-		return copyCommand.RunCommand()
+		return sc.copyCommand.RunCommand()
 	}
 
 	// sync command add '/' afert cloud prefix
@@ -570,7 +583,7 @@ func (sc *SyncCommand) RunCommand() error {
 
 	// Get keys to be deleted
 	bSame := (string(os.PathSeparator) == "/")
-	for k, _ := range srcKeys {
+	for k := range srcKeys {
 		if bSame || opType == operationTypeCopy {
 			delete(destKeys, k)
 		} else if opType == operationTypePut {
@@ -586,7 +599,7 @@ func (sc *SyncCommand) RunCommand() error {
 		fmt.Printf("\nobject will be deleted count:%d\n", len(destKeys))
 	}
 
-	err = copyCommand.RunCommand()
+	err = sc.copyCommand.RunCommand()
 	if err != nil {
 		return err
 	}
@@ -651,7 +664,7 @@ func (sc *SyncCommand) DeleteExtraObjects(keys map[string]string, sUrl StorageUR
 
 func (sc *SyncCommand) RemoveExtraFiles(keys map[string]string, sUrl StorageURLer) error {
 	var sortList []string
-	for k, _ := range keys {
+	for k := range keys {
 		sortList = append(sortList, k)
 	}
 	// remove files first,then remove dir
@@ -672,7 +685,7 @@ func (sc *SyncCommand) RemoveExtraFiles(keys map[string]string, sUrl StorageURLe
 			if len(readerInfos) > 0 {
 				continue
 			} else {
-				//empty dir,need to remove or delete
+				// empty dir,need to remove or delete
 				f, err := os.Stat(sc.syncOption.backupDir + dirName)
 				if err != nil {
 					sc.movePath(absDirName+dirName, sc.syncOption.backupDir+dirName)
@@ -942,6 +955,7 @@ func (sc *SyncCommand) readDirLimit(dirName string, limitCount int) ([]os.FileIn
 	}
 	return list, nil
 }
+
 func (sc *SyncCommand) movePath(srcName, destName string) error {
 	err := sc.moveFileToPath(srcName, destName)
 	if err != nil {
@@ -953,6 +967,7 @@ func (sc *SyncCommand) movePath(srcName, destName string) error {
 	}
 	return err
 }
+
 func (sc *SyncCommand) moveFileToPath(srcName, destName string) error {
 	err := os.Rename(srcName, destName)
 	if err == nil {

@@ -205,7 +205,7 @@ func (s *OssutilCommandSuite) TestGetInvalidSrcURL(c *C) {
 	object := dirObject + randLowStr(5)
 	s.putObject(bucketName, object, uploadFileName, c)
 
-	//get object, the src URL is a directory
+	// get object, the src URL is a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, dirObject), downloadDir, false, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, NotNil)
 	c.Assert(showElapse, Equals, false)
@@ -221,7 +221,7 @@ func (s *OssutilCommandSuite) TestGetSrcURLMissDelimiter(c *C) {
 	object := randLowStr(5)
 	s.putObject(bucketName, object, uploadFileName, c)
 
-	//get object with --recusive, the src URL is not a directory
+	// get object with --recusive, the src URL is not a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, object), downloadDir, true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -240,7 +240,7 @@ func (s *OssutilCommandSuite) TestPutInvalidSrcURL(c *C) {
 	c.Assert(err, IsNil)
 	s.createFile(filePath, content, c)
 
-	//put object, the src URL is a directory
+	// put object, the src URL is a directory
 	showElapse, err := s.rawCP(dir, CloudURLToString(destBucket, ""), false, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, NotNil)
 	c.Assert(showElapse, Equals, false)
@@ -254,7 +254,7 @@ func (s *OssutilCommandSuite) TestPutSrcURLMissDelimiter(c *C) {
 	s.putBucket(destBucket, c)
 	s.createFile(uploadFileName, content, c)
 
-	//put object with --recursive, the src URL is not a directory, it is invalid
+	// put object with --recursive, the src URL is not a directory, it is invalid
 	showElapse, err := s.rawCP(uploadFileName, CloudURLToString(destBucket, ""), true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -273,7 +273,7 @@ func (s *OssutilCommandSuite) TestCopyInvalidSrcURL(c *C) {
 	object := dirObject + randLowStr(5)
 	s.putObject(bucketName, object, uploadFileName, c)
 
-	//copy object, the src URL is a directory
+	// copy object, the src URL is a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, dirObject), CloudURLToString(destBucket, ""), false, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, NotNil)
 	c.Assert(showElapse, Equals, false)
@@ -292,7 +292,7 @@ func (s *OssutilCommandSuite) TestCopySrcURLMissDelimiter(c *C) {
 	object := randLowStr(5)
 	s.putObject(bucketName, object, uploadFileName, c)
 
-	//copy object with --recusive, the src URL is not a directory
+	// copy object with --recusive, the src URL is not a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, object), CloudURLToString(destBucket, ""), true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -312,7 +312,7 @@ func (s *OssutilCommandSuite) TestGetDestURLMissDelimiter(c *C) {
 
 	downloadPath := downloadDir + "/" + randLowStr(10)
 
-	//get object with --recusive, the dest URL is not a directory
+	// get object with --recusive, the dest URL is not a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, dirObject), downloadPath, true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -353,7 +353,7 @@ func (s *OssutilCommandSuite) TestCopyDestURLMissDelimiter(c *C) {
 
 	destObject := randLowStr(5)
 
-	//get object with --recusive, the dest URL is not a directory
+	// get object with --recusive, the dest URL is not a directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, dirObject), CloudURLToString(destBucket, destObject), true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -372,7 +372,7 @@ func (s *OssutilCommandSuite) TestGetMultiLevelSrcURL(c *C) {
 	multiLevelObj := multiLevelDir + "/" + object
 	s.putObject(bucketName, multiLevelObj, uploadFileName, c)
 
-	//get object, the src object is in multi-level directory
+	// get object, the src object is in multi-level directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, multiLevelObj), downloadDir, true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -385,7 +385,7 @@ func (s *OssutilCommandSuite) TestGetMultiLevelSrcURL(c *C) {
 	multiLevelObj = multiLevelDir + "/" + object
 	s.putObject(bucketName, multiLevelObj, uploadFileName, c)
 
-	//get object with --recursive, the src dir object is not end with "/"
+	// get object with --recursive, the src dir object is not end with "/"
 	showElapse, err = s.rawCP(CloudURLToString(bucketName, multiLevelDir), downloadDir, true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -394,7 +394,7 @@ func (s *OssutilCommandSuite) TestGetMultiLevelSrcURL(c *C) {
 	err = os.Remove(downloadDir + "/" + suffix + "/" + object)
 	c.Assert(err, IsNil)
 
-	//get object with --recursive, the src dir object is multi-level directory
+	// get object with --recursive, the src dir object is multi-level directory
 	showElapse, err = s.rawCP(CloudURLToString(bucketName, multiLevelDir+"/"), downloadDir, true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -417,7 +417,7 @@ func (s *OssutilCommandSuite) TestPutMultiLevelSrcURL(c *C) {
 	c.Assert(err, IsNil)
 	s.createFile(filePath, content, c)
 
-	//put object, the src file is in multi-level directory
+	// put object, the src file is in multi-level directory
 	showElapse, err := s.rawCP(filePath, CloudURLToString(destBucket, ""), false, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -427,7 +427,7 @@ func (s *OssutilCommandSuite) TestPutMultiLevelSrcURL(c *C) {
 	filePath = multiLevelDir + "/" + fileName
 	s.createFile(filePath, content, c)
 
-	//put object with --recursive, the src dir is multi-level directory
+	// put object with --recursive, the src dir is multi-level directory
 	showElapse, err = s.rawCP(multiLevelDir, CloudURLToString(destBucket, ""), true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -453,7 +453,7 @@ func (s *OssutilCommandSuite) TestCopyMultiLevelSrcURL(c *C) {
 	multiLevelObj := multiLevelDir + "/" + object
 	s.putObject(bucketName, multiLevelObj, fileName, c)
 
-	//copy object, the src object is in multi-level directory
+	// copy object, the src object is in multi-level directory
 	showElapse, err := s.rawCP(CloudURLToString(bucketName, multiLevelObj), CloudURLToString(destBucket, ""), false, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -463,7 +463,7 @@ func (s *OssutilCommandSuite) TestCopyMultiLevelSrcURL(c *C) {
 	multiLevelObj = multiLevelDir + "/" + object
 	s.putObject(bucketName, multiLevelObj, fileName, c)
 
-	//copy object with --recursive, the src dir is multi-level directory
+	// copy object with --recursive, the src dir is multi-level directory
 	showElapse, err = s.rawCP(CloudURLToString(bucketName, multiLevelDir), CloudURLToString(destBucket, ""), true, true, false, DefaultBigFileThreshold, CheckpointDir)
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
@@ -483,13 +483,13 @@ func (s *OssutilCommandSuite) TestPutWithPayer(c *C) {
 	s.createFile(uploadFileName, content, c)
 	bucketName := payerBucket
 
-	//put object, with --payer=requester
+	// put object, with --payer=requester
 	args := []string{uploadFileName, CloudURLToString(bucketName, "")}
 	showElapse, err := s.rawCPWithPayer(args, false, true, false, DefaultBigFileThreshold, "requester")
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
 
-	//put object resumble, with --payer=requester
+	// put object resumble, with --payer=requester
 	args = []string{uploadFileName, CloudURLToString(bucketName, "")}
 	showElapse, err = s.rawCPWithPayer(args, false, true, false, 1, "requester")
 	c.Assert(err, IsNil)
@@ -501,7 +501,7 @@ func (s *OssutilCommandSuite) TestPutWithPayerInvalidPayer(c *C) {
 	bucketName := payerBucket
 	invalidPayer := randStr(10)
 
-	//put object, with --payer=requester
+	// put object, with --payer=requester
 	args := []string{uploadFileName, CloudURLToString(bucketName, "")}
 	showElapse, err := s.rawCPWithPayer(args, false, true, false, DefaultBigFileThreshold, invalidPayer)
 	c.Assert(err, NotNil)
@@ -513,32 +513,32 @@ func (s *OssutilCommandSuite) TestGetWithPayer(c *C) {
 	bucketName := payerBucket
 	destObject := randStr(10)
 
-	//at first, put object to bucket for test
+	// at first, put object to bucket for test
 	args := []string{uploadFileName, CloudURLToString(bucketName, destObject)}
 	showElapse, err := s.rawCPWithPayer(args, false, true, false, DefaultBigFileThreshold, "requester")
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
 
-	//get object, with --payer=requester
+	// get object, with --payer=requester
 	args = []string{CloudURLToString(bucketName, destObject), downloadFileName}
 	showElapse, err = s.rawCPWithPayer(args, false, true, false, DefaultBigFileThreshold, "requester")
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
 
-	//get object resumble, with --payer=requester
+	// get object resumble, with --payer=requester
 	showElapse, err = s.rawCPWithPayer(args, false, true, false, 1, "requester")
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
 }
 
 func (s *OssutilCommandSuite) TestCopyWithPayer(c *C) {
-	//copy from payer bucket
+	// copy from payer bucket
 	srcBucket := payerBucket
 	destBucket := bucketNamePrefix + randLowStr(5)
 	s.putBucketWithEndPoint(destBucket, payerBucketEndPoint, c)
 	s.createFile(uploadFileName, content, c)
 
-	//at first, put object to bucket for test
+	// at first, put object to bucket for test
 	args := []string{uploadFileName, CloudURLToString(srcBucket, "")}
 	showElapse, err := s.rawCPWithPayer(args, false, true, false, DefaultBigFileThreshold, "requester")
 	c.Assert(err, IsNil)
@@ -553,7 +553,7 @@ func (s *OssutilCommandSuite) TestCopyWithPayer(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(showElapse, Equals, true)
 
-	//copy to payer bucket
+	// copy to payer bucket
 	srcBucket = destBucket
 	destBucket = payerBucket
 	args = []string{CloudURLToString(srcBucket, uploadFileName), CloudURLToString(destBucket, "")}
@@ -1596,7 +1596,7 @@ func (s *OssutilCommandSuite) TestInitReportError(c *C) {
 
 func (s *OssutilCommandSuite) TestCopyFunction(c *C) {
 	// test fileStatistic
-	copyCommand.monitor.init(operationTypePut)
+	copyCommand.monitor.init(operationTypePut, copyCommand.notifyCh)
 	storageURL, err := StorageURLFromString("&~", "")
 	c.Assert(err, IsNil)
 	copyCommand.fileStatistic([]StorageURLer{storageURL})
@@ -2732,7 +2732,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectWithInvalidIncludeExclude(c *C) {
 	s.putBucket(bucketName, c)
 	bucketStr := CloudURLToString(bucketName, "")
 
-	//0. Create dirs
+	// 0. Create dirs
 	dir := "testdir-invalid" + randLowStr(5)
 	err := os.MkdirAll(dir, 0755)
 	c.Assert(err, IsNil)
@@ -2862,7 +2862,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectWithInvalidIncludeExcludeEqual(c 
 	s.putBucket(bucketName, c)
 	bucketStr := CloudURLToString(bucketName, "")
 
-	//0. Create dirs
+	// 0. Create dirs
 	dir := "testdir-invalid" + randLowStr(5)
 	err := os.MkdirAll(dir, 0755)
 
@@ -2913,7 +2913,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectWithInvalidIncludeExcludeEqual(c 
 	cmdline = []string{"ossutil", "cp", bucketStr, downdir, "-rf", "--meta", "Cache-Control:no-cache"}
 	showElapse, err = s.rawCPWithFilter(args, true, true, false, DefaultBigFileThreshold, CheckpointDir, cmdline, "Cache-Control:no-cache", "")
 	c.Assert(showElapse, Equals, true)
-	//c.Assert(err.Error() == "No need to set meta for download", Equals, true)
+	// c.Assert(err.Error() == "No need to set meta for download", Equals, true)
 
 	cmdline = []string{"ossutil", "cp", bucketStr, downdir, "-rf", "--acl", "public-read"}
 	showElapse, err = s.rawCPWithFilter(args, true, true, false, DefaultBigFileThreshold, CheckpointDir, cmdline, "", "public-read")
@@ -3298,13 +3298,13 @@ func (s *OssutilCommandSuite) TestCPObjectLimitSpeed(c *C) {
 	costSecond := endT.UnixNano()/1000/1000 - startT.UnixNano()/1000/1000
 	c.Assert(costSecond >= int64(upSecond)*1000, Equals, true)
 
-	//down object
+	// down object
 	downFileName := fileName + "-down"
 	dwArgs := []string{CloudURLToString(bucketName, object), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//compare content
+	// compare content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(objectContext, Equals, string(fileBody))
@@ -3361,19 +3361,19 @@ func (s *OssutilCommandSuite) TestCPDirLimitSpeed(c *C) {
 	costSecond := endT.UnixNano()/1000/1000 - startT.UnixNano()/1000/1000
 	c.Assert(costSecond >= int64(upSecond)*1000*int64(fileCount), Equals, true)
 
-	//down object 1
+	// down object 1
 	delete(options, "recursive")
 	downFileName := objectFirst
 	dwArgs := []string{CloudURLToString(bucketName, objectFirst), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//compare content
+	// compare content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(objectContext, Equals, string(fileBody))
 
-	//down object 2
+	// down object 2
 	downFileName = objectSecond
 	dwArgs = []string{CloudURLToString(bucketName, objectSecond), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
@@ -3433,7 +3433,7 @@ func (s *OssutilCommandSuite) TestCPDownloadDirLimitSpeed(c *C) {
 	_, err = cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//begin download file
+	// begin download file
 	downDir := udir + "_down"
 	cpArgs = []string{CloudURLToString(bucketName, ""), downDir}
 	maxDownSpeed := int64(500)
@@ -3451,7 +3451,7 @@ func (s *OssutilCommandSuite) TestCPDownloadDirLimitSpeed(c *C) {
 	c.Assert(downloadSpeed <= (float64)(maxDownSpeed)*1.2, Equals, true)
 	c.Assert(downloadSpeed >= (float64)(maxDownSpeed)*0.8, Equals, true)
 
-	//compare content
+	// compare content
 	fileBody, err := ioutil.ReadFile(downDir + string(os.PathSeparator) + objectFirst)
 	c.Assert(err, IsNil)
 	c.Assert(objectContext, Equals, string(fileBody))
@@ -3618,7 +3618,7 @@ func (s *OssutilCommandSuite) TestCPDownloadSnapshot(c *C) {
 	bucketName := bucketNamePrefix + randLowStr(12)
 	s.putBucket(bucketName, c)
 
-	//download snapshot dir
+	// download snapshot dir
 	testSnapshotDir := "ossutil_test_snapshot" + randStr(5)
 	os.RemoveAll(testSnapshotDir)
 
@@ -3655,12 +3655,12 @@ func (s *OssutilCommandSuite) TestCPDownloadSnapshot(c *C) {
 	_, err = cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//check download file object1
+	// check download file object1
 	fileInfo, err := os.Stat(downloadDir + string(os.PathSeparator) + object1)
 	c.Assert(err, IsNil)
 	c.Assert(fileInfo.Size(), Equals, int64(len(data)))
 
-	//remove downloadfile and check
+	// remove downloadfile and check
 	err = os.Remove(downloadDir + string(os.PathSeparator) + object1)
 	c.Assert(err, IsNil)
 	fileInfo, err = os.Stat(downloadDir + string(os.PathSeparator) + object1)
@@ -3674,7 +3674,7 @@ func (s *OssutilCommandSuite) TestCPDownloadSnapshot(c *C) {
 	_, err = cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//check download file object2
+	// check download file object2
 	fileInfo, err = os.Stat(downloadDir + string(os.PathSeparator) + object2)
 	c.Assert(err, IsNil)
 	c.Assert(fileInfo.Size(), Equals, int64(len(data)))
@@ -3683,7 +3683,7 @@ func (s *OssutilCommandSuite) TestCPDownloadSnapshot(c *C) {
 	fileInfo, err = os.Stat(downloadDir + string(os.PathSeparator) + object1)
 	c.Assert(err, NotNil)
 
-	//remove snapshot file
+	// remove snapshot file
 	err = os.RemoveAll(testSnapshotDir)
 	c.Assert(err, IsNil)
 
@@ -3756,7 +3756,7 @@ func (s *OssutilCommandSuite) TestCPVersioingDownloadSuccess(c *C) {
 
 	downFileName := "ossutil_test_" + randStr(5)
 
-	//download with version-id
+	// download with version-id
 	cpArgs := []string{CloudURLToString(bucketName, objectName), downFileName}
 	str := ""
 	cpDir := CheckpointDir
@@ -3808,7 +3808,7 @@ func (s *OssutilCommandSuite) TestCPVersioingCopySuccess(c *C) {
 	// copy object
 	objectTarget := objectName + "-target"
 
-	//copy object
+	// copy object
 	cpArgs := []string{CloudURLToString(bucketName, objectName), CloudURLToString(bucketName, objectTarget)}
 	str := ""
 	cpDir := CheckpointDir
@@ -3935,7 +3935,7 @@ func (s *OssutilCommandSuite) TestCPSetLocalAddrSuccess(c *C) {
 	bucketName := bucketNamePrefix + randLowStr(12)
 	s.putBucket(bucketName, c)
 
-	//get local ip
+	// get local ip
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	c.Assert(err, IsNil)
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
@@ -3973,7 +3973,7 @@ func (s *OssutilCommandSuite) TestCPSetLocalAddrSuccess(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -3988,7 +3988,7 @@ func (s *OssutilCommandSuite) TestCPSetLocalAddrError(c *C) {
 	bucketName := bucketNamePrefix + randLowStr(12)
 	s.putBucket(bucketName, c)
 
-	//get local ip
+	// get local ip
 	localIp := "127.0.0.1"
 
 	// prepare file
@@ -4075,7 +4075,7 @@ func (s *OssutilCommandSuite) TestUploadSymlinkDir(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -4143,7 +4143,7 @@ func (s *OssutilCommandSuite) TestUploadSubSymlinkDir(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -4154,7 +4154,7 @@ func (s *OssutilCommandSuite) TestUploadSubSymlinkDir(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err = ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -4215,7 +4215,7 @@ func (s *OssutilCommandSuite) TestUploadOnlyCurrentDir(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -4282,7 +4282,7 @@ func (s *OssutilCommandSuite) TestDownloadOnlyCurrentDir(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -4373,7 +4373,7 @@ func (s *OssutilCommandSuite) TestUploadDisableDirObject(c *C) {
 	_, err = cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//down success
+	// down success
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
@@ -4426,7 +4426,7 @@ func (s *OssutilCommandSuite) TestCPObjectProgressBarNetErrorRetry(c *C) {
 		"retryTimes":       &strRetryTimes,
 	}
 
-	//start mock http server
+	// start mock http server
 	svr := startHttpServer(MockOssServerHandle)
 
 	// calculate time
@@ -4544,12 +4544,12 @@ func (s *OssutilCommandSuite) TestUploadWithDisableAllSymlinkDirSuccess(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//download dir object success
+	// download dir object success
 	dwArgs = []string{CloudURLToString(bucketName, testFileName), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//download dir symlink failure
+	// download dir symlink failure
 	dwArgs = []string{CloudURLToString(bucketName, testSymlinkFile), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, NotNil)
@@ -4642,7 +4642,7 @@ func (s *OssutilCommandSuite) TestDownLoadWithoutDisableIgnoreError(c *C) {
 	_, err = s.rawCPWithFilter(args, false, true, false, DefaultBigFileThreshold, CheckpointDir, cmdline, "X-oss-Storage-Class:Standard", "")
 	c.Assert(err, IsNil)
 
-	//down dir name
+	// down dir name
 	dirName := "ossutil_test_dir_" + randStr(5)
 	err = os.MkdirAll(dirName, 0755)
 	c.Assert(err, IsNil)
@@ -4720,7 +4720,7 @@ func (s *OssutilCommandSuite) TestDownLoadWithDisableIgnoreError(c *C) {
 	_, err = s.rawCPWithFilter(args, false, true, false, DefaultBigFileThreshold, CheckpointDir, cmdline, "X-oss-Storage-Class:Standard", "")
 	c.Assert(err, IsNil)
 
-	//down dir name
+	// down dir name
 	dirName := "ossutil_test_dir_" + randStr(5)
 	err = os.MkdirAll(dirName, 0755)
 	c.Assert(err, IsNil)
@@ -5134,7 +5134,7 @@ func (s *OssutilCommandSuite) TestBatchDownloadSymlinkObject(c *C) {
 	_, err = s.rawCPWithFilter(args, true, true, false, int64(len/2), CheckpointDir, cmdline, "", "")
 	c.Assert(err, IsNil)
 
-	//check size
+	// check size
 	fileInfo, err := os.Stat(symObject)
 	c.Assert(err, IsNil)
 	c.Assert(fileInfo.Size(), Equals, int64(len))
@@ -5188,7 +5188,7 @@ func (s *OssutilCommandSuite) TestBatchDownloadSymlinkObjectWithMultilevelAndEmp
 	_, err = os.Stat(symObject2)
 	c.Assert(err, NotNil)
 
-	//delete object
+	// delete object
 	command := "rm"
 	args = []string{CloudURLToString(bucketName, object)}
 	testLogger.Print(configFile)
@@ -5288,7 +5288,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderAKmode(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5348,7 +5348,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderEcsmodeWithConfigEcsUrl(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5456,7 +5456,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderEcsmodeWithRolename(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5519,7 +5519,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithArn(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5571,7 +5571,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithConfigArn(c *C)
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5580,7 +5580,6 @@ func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithConfigArn(c *C)
 	os.Remove(downFileName)
 	os.Remove(testFileName)
 	s.removeBucket(bucketName, true, c)
-
 }
 
 func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithEmptyArn(c *C) {
@@ -5661,7 +5660,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithTokenTimeout(c 
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5709,7 +5708,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderRamRoleArnmodeWithStsRegion(c *C)
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5754,7 +5753,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderNomode(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5850,7 +5849,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderNomodeUsingEcsRoleAK(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5917,7 +5916,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderNomodeWithTimeOut(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -5978,7 +5977,7 @@ func (s *OssutilCommandSuite) TestCPObjectUnderSTStokenmode(c *C) {
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//check content
+	// check content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(data, Equals, string(fileBody))
@@ -6064,13 +6063,13 @@ func (s *OssutilCommandSuite) TestCPObjectSkipVerifyCert(c *C) {
 	_, err := cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//down object
+	// down object
 	downFileName := fileName + "-down"
 	dwArgs := []string{CloudURLToString(bucketName, object), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//compare content
+	// compare content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(objectContext, Equals, string(fileBody))
@@ -6107,13 +6106,13 @@ func (s *OssutilCommandSuite) TestCloudBoxCreateAndDeleteBucket(c *C) {
 	_, err := cm.RunCommand("cp", cpArgs, options)
 	c.Assert(err, IsNil)
 
-	//down object
+	// down object
 	downFileName := fileName + "-down"
 	dwArgs := []string{CloudURLToString(bucketName, object), downFileName}
 	_, err = cm.RunCommand("cp", dwArgs, options)
 	c.Assert(err, IsNil)
 
-	//compare content
+	// compare content
 	fileBody, err := ioutil.ReadFile(downFileName)
 	c.Assert(err, IsNil)
 	c.Assert(objectContext, Equals, string(fileBody))
@@ -6380,7 +6379,7 @@ func (s *OssutilCommandSuite) TestCpCmdWithTimeDir(c *C) {
 	bucketName := bucketNamePrefix + randLowStr(10)
 	s.putBucket(bucketName, c)
 
-	//objectContext := randLowStr(10)
+	// objectContext := randLowStr(10)
 	dir := "testdir-inc1" + randLowStr(5)
 	subdir := "dir1"
 	contents := map[string]string{}
@@ -6703,7 +6702,7 @@ func (s *OssutilCommandSuite) TestBatchCPFileToObjectWithStartTimeAndEndTime(c *
 		time.Sleep(time.Second * 2)
 	}
 
-	//cp 1,2,3,4
+	// cp 1,2,3,4
 	// e.g., ossutil cp testdir-inc/ oss://tempb4 -rf --start-time fileinfos[1].ModTime().Unix()
 	// upload files
 	args := []string{dir, bucketStr}
@@ -6733,7 +6732,7 @@ func (s *OssutilCommandSuite) TestBatchCPFileToObjectWithStartTimeAndEndTime(c *
 		c.Assert(objects[i-1], Equals, fileinfos[i].Name())
 	}
 
-	//cp 2,3
+	// cp 2,3
 	s.clearObjects(bucketName, "", c)
 	startTime = fileinfos[2].ModTime().Unix()
 	endTime := fileinfos[3].ModTime().Unix()
@@ -6793,7 +6792,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectToFiletWithStartTimeAndEndTime(c 
 	c.Assert(len(objects), Equals, num)
 	os.Remove(filename)
 
-	//cp 1,2,3,4
+	// cp 1,2,3,4
 	// e.g., ossutil cp oss://tempb4  testdir-inc/ -rf --start-time objects[1].ModTime().Unix()
 	// upload files
 	args := []string{bucketStr, dir}
@@ -6827,7 +6826,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectToFiletWithStartTimeAndEndTime(c 
 		c.Assert(files[i-1], Equals, objects[i])
 	}
 
-	//2,3
+	// 2,3
 	os.RemoveAll(dir)
 	err = os.MkdirAll(dir, 0755)
 	c.Assert(err, IsNil)
@@ -6884,7 +6883,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectToObjectWithStartTimeAndEndTime(c
 	c.Assert(len(objects), Equals, num)
 	os.RemoveAll(dir)
 
-	//cp 1,2,3,4
+	// cp 1,2,3,4
 	// e.g., ossutil cp oss://tempb4  testdir-inc/ -rf --start-time objects[1].ModTime().Unix()
 	// upload files
 	args := []string{bucketStr, bucket2Str}
@@ -6918,7 +6917,7 @@ func (s *OssutilCommandSuite) TestBatchCPObjectToObjectWithStartTimeAndEndTime(c
 		c.Assert(objects2[i-1], Equals, objects[i])
 	}
 
-	//2,3
+	// 2,3
 	s.clearObjects(bucketName2, "", c)
 	stat = s.getStat(bucketName, objects[2], c)
 	t, err = parseTimeDates((stat[StatLastModified]))

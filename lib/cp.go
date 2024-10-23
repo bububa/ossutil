@@ -3,7 +3,6 @@ package lib
 import (
 	"fmt"
 	"hash/fnv"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -66,6 +65,7 @@ type copyOptionType struct {
 	bSyncCommand      bool
 	startTime         int64
 	endTime           int64
+	ignoreHiddenFile  bool
 }
 
 type filterOptionType struct {
@@ -146,7 +146,6 @@ func (l *OssResumeProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 }
 
 var specChineseCopy = SpecText{
-
 	synopsisText: "上传，下载或拷贝Objects",
 
 	paramText: "src_url dest_url [options]",
@@ -669,7 +668,6 @@ var specChineseCopy = SpecText{
 }
 
 var specEnglishCopy = SpecText{
-
 	synopsisText: "Upload, Download or Copy Objects",
 
 	paramText: "src_url dest_url [options]",
@@ -1244,80 +1242,86 @@ Usage:
 
 // CopyCommand is the command upload, download and copy objects
 type CopyCommand struct {
-	monitor  CPMonitor //Put first for atomic op on some fileds
+	monitor  *CPMonitor // Put first for atomic op on some fileds
 	command  Command
 	cpOption copyOptionType
 }
 
-var copyCommand = CopyCommand{
-	command: Command{
-		name:        "cp",
-		nameAlias:   []string{"copy"},
-		minArgc:     2,
-		maxArgc:     MaxInt,
-		specChinese: specChineseCopy,
-		specEnglish: specEnglishCopy,
-		group:       GroupTypeNormalCommand,
-		validOptionNames: []string{
-			OptionRecursion,
-			OptionForce,
-			OptionUpdate,
-			OptionContinue,
-			OptionOutputDir,
-			OptionBigFileThreshold,
-			OptionPartSize,
-			OptionCheckpointDir,
-			OptionRange,
-			OptionEncodingType,
-			OptionInclude,
-			OptionExclude,
-			OptionMeta,
-			OptionACL,
-			OptionConfigFile,
-			OptionEndpoint,
-			OptionAccessKeyID,
-			OptionAccessKeySecret,
-			OptionSTSToken,
-			OptionProxyHost,
-			OptionProxyUser,
-			OptionProxyPwd,
-			OptionRetryTimes,
-			OptionRoutines,
-			OptionParallel,
-			OptionSnapshotPath,
-			OptionDisableCRC64,
-			OptionRequestPayer,
-			OptionLogLevel,
-			OptionMaxUpSpeed,
-			OptionPartitionDownload,
-			OptionVersionId,
-			OptionLocalHost,
-			OptionEnableSymlinkDir,
-			OptionOnlyCurrentDir,
-			OptionDisableDirObject,
-			OptionDisableAllSymlink,
-			OptionDisableIgnoreError,
-			OptionTagging,
-			OptionPassword,
-			OptionMode,
-			OptionECSRoleName,
-			OptionTokenTimeout,
-			OptionRamRoleArn,
-			OptionRoleSessionName,
-			OptionReadTimeout,
-			OptionConnectTimeout,
-			OptionSTSRegion,
-			OptionSkipVerifyCert,
-			OptionMaxDownSpeed,
-			OptionUserAgent,
-			OptionSignVersion,
-			OptionRegion,
-			OptionCloudBoxID,
-			OptionForcePathStyle,
-			OptionStartTime,
-			OptionEndTime,
+var copyCommand = *NewCopyCommand()
+
+func NewCopyCommand() *CopyCommand {
+	return &CopyCommand{
+		monitor: new(CPMonitor),
+		command: Command{
+			name:        "cp",
+			nameAlias:   []string{"copy"},
+			minArgc:     2,
+			maxArgc:     MaxInt,
+			specChinese: specChineseCopy,
+			specEnglish: specEnglishCopy,
+			group:       GroupTypeNormalCommand,
+			validOptionNames: []string{
+				OptionRecursion,
+				OptionForce,
+				OptionUpdate,
+				OptionContinue,
+				OptionOutputDir,
+				OptionBigFileThreshold,
+				OptionPartSize,
+				OptionCheckpointDir,
+				OptionRange,
+				OptionEncodingType,
+				OptionInclude,
+				OptionExclude,
+				OptionMeta,
+				OptionACL,
+				OptionConfigFile,
+				OptionEndpoint,
+				OptionAccessKeyID,
+				OptionAccessKeySecret,
+				OptionSTSToken,
+				OptionProxyHost,
+				OptionProxyUser,
+				OptionProxyPwd,
+				OptionRetryTimes,
+				OptionRoutines,
+				OptionParallel,
+				OptionSnapshotPath,
+				OptionDisableCRC64,
+				OptionRequestPayer,
+				OptionLogLevel,
+				OptionMaxUpSpeed,
+				OptionPartitionDownload,
+				OptionVersionId,
+				OptionLocalHost,
+				OptionEnableSymlinkDir,
+				OptionOnlyCurrentDir,
+				OptionDisableDirObject,
+				OptionDisableAllSymlink,
+				OptionDisableIgnoreError,
+				OptionTagging,
+				OptionPassword,
+				OptionMode,
+				OptionECSRoleName,
+				OptionTokenTimeout,
+				OptionRamRoleArn,
+				OptionRoleSessionName,
+				OptionReadTimeout,
+				OptionConnectTimeout,
+				OptionSTSRegion,
+				OptionSkipVerifyCert,
+				OptionMaxDownSpeed,
+				OptionUserAgent,
+				OptionSignVersion,
+				OptionRegion,
+				OptionCloudBoxID,
+				OptionForcePathStyle,
+				OptionStartTime,
+				OptionEndTime,
+				OptionIgnoreHiddenFile,
+			},
 		},
-	},
+	}
 }
 
 // function for FormatHelper interface
@@ -1332,6 +1336,14 @@ func (cc *CopyCommand) formatIndependHelp() string {
 // Init simulate inheritance, and polymorphism
 func (cc *CopyCommand) Init(args []string, options OptionMapType) error {
 	return cc.command.Init(args, options, cc)
+}
+
+func (cc *CopyCommand) Monitor() <-chan *CPMonitorSnap {
+	return cc.monitor.Monitor()
+}
+
+func (cc *CopyCommand) SetMonitor(ch chan *CPMonitorSnap) {
+	cc.monitor.SetMonitor(ch)
 }
 
 // RunCommand simulate inheritance, and polymorphism
@@ -1361,6 +1373,7 @@ func (cc *CopyCommand) RunCommand() error {
 	cc.cpOption.onlyCurrentDir, _ = GetBool(OptionOnlyCurrentDir, cc.command.options)
 	cc.cpOption.disableDirObject, _ = GetBool(OptionDisableDirObject, cc.command.options)
 	cc.cpOption.disableAllSymlink, _ = GetBool(OptionDisableAllSymlink, cc.command.options)
+	cc.cpOption.ignoreHiddenFile, _ = GetBool(OptionIgnoreHiddenFile, cc.command.options)
 
 	if cc.cpOption.enableSymlinkDir && cc.cpOption.disableAllSymlink {
 		return fmt.Errorf("--enable-symlink-dir and --disable-all-symlink can't be both exist")
@@ -1386,7 +1399,7 @@ func (cc *CopyCommand) RunCommand() error {
 		return fmt.Errorf("start time %d is larger than end time %d", cc.cpOption.startTime, cc.cpOption.endTime)
 	}
 
-	//get file list
+	// get file list
 	srcURLList, err := cc.getStorageURLs(cc.command.args[0 : len(cc.command.args)-1])
 	if err != nil {
 		return err
@@ -1462,7 +1475,6 @@ func (cc *CopyCommand) RunCommand() error {
 
 	// create checkpoint dir
 	if err := os.MkdirAll(cc.cpOption.cpDir, 0755); err != nil {
-
 		//
 		//fmt.Printf("%s", cc.cpOption.cpDir)
 		return err
@@ -1527,7 +1539,7 @@ func (cc *CopyCommand) RunCommand() error {
 	}
 
 	cc.cpOption.reporter.Clear()
-	ckFiles, _ := ioutil.ReadDir(cc.cpOption.cpDir)
+	ckFiles, _ := os.ReadDir(cc.cpOption.cpDir)
 	if err == nil && len(ckFiles) == 0 {
 		LogInfo("begin Remove checkpointDir %s\n", cc.cpOption.cpDir)
 		os.RemoveAll(cc.cpOption.cpDir)
@@ -1639,7 +1651,7 @@ func (cc *CopyCommand) uploadFiles(srcURLList []StorageURLer, destURL CloudURL) 
 		return err
 	}
 
-	//adjust oss prefix name
+	// adjust oss prefix name
 	destURL, err = cc.adjustDestURLForUpload(srcURLList, destURL)
 	if err != nil {
 		return err
@@ -1750,7 +1762,7 @@ func (cc *CopyCommand) getCurrentDirFilesStatistic(dpath string) error {
 		dpath += string(os.PathSeparator)
 	}
 
-	fileList, err := ioutil.ReadDir(dpath)
+	fileList, err := os.ReadDir(dpath)
 	if err != nil {
 		return err
 	}
@@ -1762,9 +1774,16 @@ func (cc *CopyCommand) getCurrentDirFilesStatistic(dpath string) error {
 				// for symlink
 				continue
 			}
+			if cc.cpOption.ignoreHiddenFile {
+				if skip, _ := isHiddenFile(fileInfo.Name()); skip {
+					continue
+				}
+			}
 
 			if doesSingleFileMatchPatterns(fileInfo.Name(), cc.cpOption.filters) {
-				cc.monitor.updateScanSizeNum(fileInfo.Size(), 1)
+				if info, err := fileInfo.Info(); err == nil {
+					cc.monitor.updateScanSizeNum(info.Size(), 1)
+				}
 			}
 		}
 	}
@@ -1887,7 +1906,7 @@ func (cc *CopyCommand) getCurrentDirFileList(dpath string, chFiles chan<- fileIn
 		dpath += string(os.PathSeparator)
 	}
 
-	fileList, err := ioutil.ReadDir(dpath)
+	fileList, err := os.ReadDir(dpath)
 	if err != nil {
 		return err
 	}
@@ -1926,6 +1945,12 @@ func (cc *CopyCommand) getFileList(dpath string, chFiles chan<- fileInfoType) er
 		fileName, err := filepath.Rel(dpath, fpath)
 		if err != nil {
 			return fmt.Errorf("list file error: %s, info: %s", fpath, err.Error())
+		}
+
+		if cc.cpOption.ignoreHiddenFile {
+			if skip, _ := isHiddenFile(fpath); skip {
+				return nil
+			}
 		}
 
 		if f.IsDir() {
@@ -2054,7 +2079,7 @@ func (cc *CopyCommand) uploadFileWithReport(bucket *oss.Bucket, destURL CloudURL
 }
 
 func (cc *CopyCommand) uploadFile(bucket *oss.Bucket, destURL CloudURL, file fileInfoType) (skip bool, rerr error, isDir bool, size int64, msg string) {
-	//first make object name
+	// first make object name
 	objectName := cc.makeObjectName(destURL, file)
 
 	filePath := file.filePath
@@ -2066,7 +2091,7 @@ func (cc *CopyCommand) uploadFile(bucket *oss.Bucket, destURL CloudURL, file fil
 	size = 0 // the size update to monitor
 	msg = fmt.Sprintf("%s %s to %s", opUpload, filePath, CloudURLToString(bucket.BucketName, objectName))
 
-	//get file size and last modify time
+	// get file size and last modify time
 	f, err := os.Stat(filePath)
 	if err != nil {
 		rerr = err
@@ -2099,9 +2124,9 @@ func (cc *CopyCommand) uploadFile(bucket *oss.Bucket, destURL CloudURL, file fil
 	}
 
 	size = 0
-	//decide whether to use resume upload
+	// decide whether to use resume upload
 	if f.Size() < cc.cpOption.threshold {
-		var listener *OssProgressListener = &OssProgressListener{&cc.monitor, 0, 0, false}
+		var listener *OssProgressListener = &OssProgressListener{cc.monitor, 0, 0, false}
 		options := cc.cpOption.options
 		options = append(options, oss.Progress(listener))
 		rerr = cc.ossUploadFileRetry(bucket, objectName, filePath, options...)
@@ -2111,10 +2136,10 @@ func (cc *CopyCommand) uploadFile(bucket *oss.Bucket, destURL CloudURL, file fil
 		return
 	}
 
-	var listener *OssResumeProgressListener = &OssResumeProgressListener{&cc.monitor, 0, 0, false, false}
+	var listener *OssResumeProgressListener = &OssResumeProgressListener{cc.monitor, 0, 0, false, false}
 
-	//make options for resume multipart upload
-	//part size
+	// make options for resume multipart upload
+	// part size
 	partSize, rt := cc.preparePartOption(f.Size())
 	LogInfo("multipart upload,file:%s,file size:%d,partSize:%d,routin count:%d\n",
 		filePath, f.Size(), partSize, rt)
@@ -2487,11 +2512,11 @@ func (cc *CopyCommand) downloadSingleFileWithReport(bucket *oss.Bucket, objectIn
 }
 
 func (cc *CopyCommand) downloadSingleFile(bucket *oss.Bucket, objectInfo objectInfoType, filePath string) (bool, error, int64, string) {
-	//get object size and last modify time
+	// get object size and last modify time
 	object := objectInfo.prefix + objectInfo.relativeKey
 	size := objectInfo.size
 	srct := objectInfo.lastModified
-	//make file name
+	// make file name
 	fileName := cc.makeFileName(objectInfo.relativeKey, filePath)
 	msg := fmt.Sprintf("%s %s to %s", opDownload, CloudURLToString(bucket.BucketName, object), fileName)
 
@@ -2522,7 +2547,7 @@ func (cc *CopyCommand) downloadSingleFile(bucket *oss.Bucket, objectInfo objectI
 		return false, os.MkdirAll(fileName, 0755), rsize, msg
 	}
 
-	//create parent directory
+	// create parent directory
 	if err := cc.createParentDirectory(fileName); err != nil {
 		return false, err, rsize, msg
 	}
@@ -2533,12 +2558,12 @@ func (cc *CopyCommand) downloadSingleFile(bucket *oss.Bucket, objectInfo objectI
 	}
 
 	if rsize < cc.cpOption.threshold {
-		var listener *OssProgressListener = &OssProgressListener{&cc.monitor, 0, 0, false}
+		var listener *OssProgressListener = &OssProgressListener{cc.monitor, 0, 0, false}
 		downloadOptions = append(downloadOptions, oss.Progress(listener))
 		return false, cc.ossDownloadFileRetry(bucket, object, fileName, downloadOptions...), 0, msg
 	}
 
-	var listener *OssResumeProgressListener = &OssResumeProgressListener{&cc.monitor, 0, 0, false, false}
+	var listener *OssResumeProgressListener = &OssResumeProgressListener{cc.monitor, 0, 0, false, false}
 	downloadOptions = append(downloadOptions, oss.Progress(listener))
 
 	partSize, rt := cc.preparePartOption(size)
@@ -2695,7 +2720,7 @@ func (cc *CopyCommand) objectStatistic(bucket *oss.Bucket, cloudURL CloudURL) {
 	if cc.cpOption.recursive {
 		pre := oss.Prefix(cloudURL.object)
 		marker := oss.Marker("")
-		//while the src object is end with "/", use object key as marker, exclude the object itself
+		// while the src object is end with "/", use object key as marker, exclude the object itself
 		if strings.HasSuffix(cloudURL.object, "/") {
 			marker = oss.Marker(cloudURL.object)
 		}
@@ -2813,7 +2838,7 @@ func (cc *CopyCommand) objectProducer(bucket *oss.Bucket, cloudURL CloudURL, chO
 	defer close(chObjects)
 	pre := oss.Prefix(cloudURL.object)
 	marker := oss.Marker("")
-	//while the src object is end with "/", use object key as marker, exclude the object itself
+	// while the src object is end with "/", use object key as marker, exclude the object itself
 	if strings.HasSuffix(cloudURL.object, "/") {
 		marker = oss.Marker(cloudURL.object)
 	}
@@ -2977,7 +3002,7 @@ func (cc *CopyCommand) copySingleFileWithReport(bucket *oss.Bucket, objectInfo o
 }
 
 func (cc *CopyCommand) copySingleFile(bucket *oss.Bucket, objectInfo objectInfoType, srcURL, destURL CloudURL) (bool, error, int64, string) {
-	//make object name
+	// make object name
 	srcObject := objectInfo.prefix + objectInfo.relativeKey
 	destObject := cc.makeCopyObjectName(objectInfo.relativeKey, destURL.object)
 	size := objectInfo.size
@@ -2985,7 +3010,7 @@ func (cc *CopyCommand) copySingleFile(bucket *oss.Bucket, objectInfo objectInfoT
 
 	msg := fmt.Sprintf("%s %s to %s", opCopy, CloudURLToString(srcURL.bucket, srcObject), CloudURLToString(destURL.bucket, destObject))
 
-	//get object size
+	// get object size
 	if size < 0 {
 		statOptions := cc.cpOption.payerOptions
 		if cc.cpOption.versionId != "" {
@@ -3013,7 +3038,7 @@ func (cc *CopyCommand) copySingleFile(bucket *oss.Bucket, objectInfo objectInfoT
 		return false, cc.ossCopyObjectRetry(bucket, srcObject, destURL.bucket, destObject), size, msg
 	}
 
-	var listener *OssResumeProgressListener = &OssResumeProgressListener{&cc.monitor, 0, 0, false, false}
+	var listener *OssResumeProgressListener = &OssResumeProgressListener{cc.monitor, 0, 0, false, false}
 	partSize, rt := cc.preparePartOption(size)
 	cp := oss.CheckpointDir(true, cc.cpOption.cpDir)
 	options := cc.cpOption.options

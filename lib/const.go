@@ -106,6 +106,7 @@ const (
 	OptionQueryParam          = "queryParam"
 	OptionForcePathStyle      = "forcePathStyle"
 	OptionRuntime             = "runtime"
+	OptionIgnoreHiddenFile    = "ignoreHiddenFile"
 )
 
 // the elements show in stat object
